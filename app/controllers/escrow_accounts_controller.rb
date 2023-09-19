@@ -1,0 +1,2 @@
+class EscrowAccountsController < ApplicationController
+end
