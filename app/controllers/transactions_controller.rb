@@ -110,6 +110,12 @@ class TransactionsController < ApplicationController
   end
 
   def update_account_balances(transaction)
+    byebug
+    # subtract from the buyers account 
     @user.account.subtract_from_personal_account_balance(transaction.amount)
+    byebug
+    # add to sellers hold account
+    @opposite_user.held_fund.add_to_personal_held_balance(transaction.amount)
+    byebug
   end
 end
