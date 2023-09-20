@@ -1,64 +1,80 @@
 class TransactionsController < ApplicationController
+  before_action :find_users_and_escrow, only: [:create]
 
+  def index
+    render json: Transaction.all
+  end
 
-    def index
-        render json: Transaction.all
+  def create
+    role = Transaction.roles.key(transaction_params[:role])
+
+    if role.nil?
+      render json: { error: 'Invalid role' }, status: :unprocessable_entity
+      return
     end
 
+    transaction = create_transaction(role)
+    byebug
 
-    def create
-        @user = User.find_by(id: transaction_params[:user_id])
-        @opposite_user = User.find_by(id: transaction_params[:opposite_user_id])
-        @escrow = EscrowAccount.find_by(id: 1)
-      
-        role = Transaction.roles.key(transaction_params[:role])
+    if transaction.save
+      update_account_balances(transaction) if role == 'BUYER'
+      render json: transaction
+    else
+      render json: { error: 'Failed to create transaction' }, status: :unprocessable_entity
+    end
+  end
 
-        sender = nil
-        receiver = nil
-      
-        if role == 'BUYER' # Compare with uppercase string
-            sender = @user
-            receiver = @opposite_user
-          elsif role == 'SELLER' # Compare with uppercase string
-            sender = @opposite_user
-            receiver = @user
-          else
-            # Handle invalid role here (e.g., raise an error or return an error response)
-          end
-      
-        if sender && receiver
-          transaction = Transaction.new(
-            user: sender,
-            opposite_user: receiver,
-            amount: transaction_params[:amount],
-            escrow_account: @escrow,
-            status: :PENDING,
-            role: role
-          )
-          byebug
-      
-          if transaction.save && role == 'BUYER'
-            byebug
-            sender.account.subtract_from_personal_account_balance(transaction_params[:amount])
-            byebug
-            render json: transaction
-          elsif transaction.save && role == 'SELLER'
-            byebug
-            render json: transaction
-          else
-            byebug
-            # Handle errors here (e.g., return an error response)
-          end
-        else
-          # Handle invalid role here (e.g., raise an error or return an error response)
-        end
-      end
-      
+  private
 
-    private
+  def transaction_params
+    params.require(:transaction).permit(:user_id, :opposite_user_id, :amount, :role)
+  end
 
-    def transaction_params
-        params.require(:transaction).permit( :user_id, :opposite_user_id, :amount, :role)
+  def find_users_and_escrow
+    @user = User.find_by(id: transaction_params[:user_id])
+    @opposite_user = User.find_by(id: transaction_params[:opposite_user_id])
+    @escrow = EscrowAccount.find_by(id: 1)
+  end
+
+  def create_transaction(role)
+    sender = nil
+    receiver = nil
+  
+    if role == 'BUYER'
+      sender = @user
+      receiver = @opposite_user
+    elsif role == 'SELLER'
+      sender = @opposite_user
+      receiver = @user
+    else
+      render json: { error: 'Invalid role' }, status: :unprocessable_entity
+      return
     end
 
+    byebug
+
+    if role == 'SELLER'
+      PendingSellerTransaction.new(
+        user: sender,
+        opposite_user: receiver,
+        amount: transaction_params[:amount],
+        escrow_account: @escrow,
+        status: :PENDING,
+        buyer_confirmation: :NOT_CONFIRMED
+      )
+    else
+      Transaction.new(
+        user: sender,
+        opposite_user: receiver,
+        amount: transaction_params[:amount],
+        escrow_account: @escrow,
+        status: :PENDING,
+        role: role
+      )
+    end
+  end
+
+  def update_account_balances(transaction)
+    @user.account.subtract_from_personal_account_balance(transaction.amount)
+  end
 end
