@@ -24,6 +24,41 @@ class TransactionsController < ApplicationController
     end
   end
 
+  def confirm_transaction
+    pending_transaction = PendingSellerTransaction.find(params[:id])
+  
+    if pending_transaction.buyer_confirmation == 'CONFIRMED'
+      render json: { error: 'Transaction already confirmed by the buyer' }, status: :unprocessable_entity
+      return
+    end
+  
+    pending_transaction.buyer_confirmation = 'CONFIRMED'
+    byebug
+  
+    # Move data to the Transaction table
+    transaction = Transaction.new(
+      user: pending_transaction.user,
+      opposite_user: pending_transaction.opposite_user,
+      amount: pending_transaction.amount,
+      escrow_account: pending_transaction.escrow_account,
+      status: :PENDING,
+      role: 'SELLER' # Set the role to SELLER since the buyer has confirmed
+    )
+  
+    # Use a database transaction to ensure both operations succeed or fail together
+    ActiveRecord::Base.transaction do
+      if pending_transaction.destroy && transaction.save
+        pending_transaction.user.account.subtract_from_personal_account_balance(pending_transaction.amount)
+        byebug
+        render json: transaction
+      else
+        render json: { error: 'Failed to confirm transaction' }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback # Rollback the transaction if there's an error
+      end
+    end
+  end
+  
+
   private
 
   def transaction_params
