@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :pending_seller_transactions
   resources :accounts
   resources :escrow_accounts
   resources :transactions
