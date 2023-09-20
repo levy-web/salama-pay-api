@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  get 'sessions/new'
+  get 'sessions/create'
+  get 'sessions/destroy'
   resources :pending_seller_transactions
   resources :accounts
   resources :escrow_accounts
@@ -14,4 +17,7 @@ Rails.application.routes.draw do
       post 'confirm_transaction' # Define a custom route for confirming transactions
     end
   end
+
+  post '/login', to: 'sessions#user_create'
+
 end
