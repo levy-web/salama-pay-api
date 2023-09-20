@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :pending_seller_transactions
   resources :accounts
   resources :escrow_accounts
   resources :transactions
@@ -7,4 +8,10 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "articles#index"
+
+  resources :transactions do
+    member do
+      post 'confirm_transaction' # Define a custom route for confirming transactions
+    end
+  end
 end

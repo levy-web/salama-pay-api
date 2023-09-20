@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_09_19_092957) do
+ActiveRecord::Schema[7.0].define(version: 2023_09_20_123940) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -26,6 +26,28 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_19_092957) do
     t.decimal "balance"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "held_funds", force: :cascade do |t|
+    t.decimal "amount"
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_held_funds_on_user_id"
+  end
+
+  create_table "pending_seller_transactions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "opposite_user_id", null: false
+    t.bigint "escrow_account_id"
+    t.decimal "amount"
+    t.integer "status", default: 0
+    t.integer "buyer_confirmation", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["escrow_account_id"], name: "index_pending_seller_transactions_on_escrow_account_id"
+    t.index ["opposite_user_id"], name: "index_pending_seller_transactions_on_opposite_user_id"
+    t.index ["user_id"], name: "index_pending_seller_transactions_on_user_id"
   end
 
   create_table "transactions", force: :cascade do |t|
@@ -55,6 +77,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_19_092957) do
   end
 
   add_foreign_key "accounts", "users"
+  add_foreign_key "held_funds", "users"
+  add_foreign_key "pending_seller_transactions", "escrow_accounts"
+  add_foreign_key "pending_seller_transactions", "users"
+  add_foreign_key "pending_seller_transactions", "users", column: "opposite_user_id"
   add_foreign_key "transactions", "escrow_accounts"
   add_foreign_key "transactions", "users"
   add_foreign_key "transactions", "users", column: "opposite_user_id"
