@@ -20,4 +20,10 @@ Rails.application.routes.draw do
 
   post '/login', to: 'sessions#user_create'
 
+  resources :users do
+    member do
+      post 'verify_code'
+    end
+  end
+
 end
