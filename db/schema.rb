@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_09_21_112225) do
+ActiveRecord::Schema[7.0].define(version: 2023_09_21_125009) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -104,6 +104,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_21_112225) do
     t.datetime "updated_at", null: false
     t.boolean "verified"
     t.string "verification_code"
+    t.string "id_front_url"
+    t.string "id_back_url"
+    t.string "profile_pic_url"
   end
 
   add_foreign_key "accounts", "users"

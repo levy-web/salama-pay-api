@@ -18,7 +18,8 @@ class UsersController < ApplicationController
       @user = User.new(user_params)
       @user.verification_code = rand(100_000..999_999) # Generate a random 6-digit code
   
-      if @user.save        
+      if @user.save
+        byebug
         
       # Send the verification code to the user's email (you'll need to implement this)
       UserMailer.send_verification_code(@user).deliver_now
@@ -53,7 +54,8 @@ class UsersController < ApplicationController
 
   # PATCH/PUT /users/1
   def update
-    if @user.update(user_params)
+    if @user.update(user_update_params)
+      byebug
       render json: @user
     else
       render json: @user.errors, status: :unprocessable_entity
@@ -74,5 +76,9 @@ class UsersController < ApplicationController
     # Only allow a list of trusted parameters through.
     def user_params
       params.permit(:firstName, :middleName, :surname, :email, :password, :address, :phone)
+    end
+
+    def user_update_params
+      params.require(:user).permit(:firstName, :middleName, :surname, :email, :password, :address, :phone, :id_front, :id_back, :profile_pic)
     end
 end
