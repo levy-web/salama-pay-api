@@ -1,8 +1,11 @@
 class TransactionsController < ApplicationController
+  before_action :verify_auth, only: %i[index confirm_transaction create destroy update]
   before_action :find_users_and_escrow, only: [:create]
 
   def index
-    render json: Transaction.all
+    @user = User.find_by(id: @loggedin_user[:uid])
+    byebug
+    render json: {data: {sent_transactions: @user.sent_transactions, received_transactions: @user.received_transactions, pending_buyer_transactions: @user.pending_buyer_transactions, pending_seller_transactions: @user.pending_seller_transactions}}
   end
 
   def create
@@ -66,7 +69,7 @@ class TransactionsController < ApplicationController
   end
 
   def find_users_and_escrow
-    @user = User.find_by(id: transaction_params[:user_id])
+    @user = User.find_by(id: @loggedin_user[:uid])
     @opposite_user = User.find_by(id: transaction_params[:opposite_user_id])
     @escrow = EscrowAccount.find_by(id: 1)
   end
