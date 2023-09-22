@@ -1,4 +1,5 @@
 class UsersController < ApplicationController
+  before_action :verify_auth, only: %i[index show destroy update]
   before_action :set_user, only: %i[ show update destroy ]
 
   # GET /users
@@ -43,8 +44,9 @@ class UsersController < ApplicationController
     if @user && @user.verification_code == code
       # Code matches, mark the user as verified (you can customize this logic)
       @user.update(verified: true, verification_code: nil)
+      token = encode_token(@user.id, @user.email, @user.password)
   
-      render json: { message: 'Verification successful. You are now registered.' }
+      render json: { token:token, message: 'Verification successful. You are now registered.' }
     else
       render json: { error: 'Invalid verification code.' }, status: :unprocessable_entity
     end
@@ -55,7 +57,6 @@ class UsersController < ApplicationController
   # PATCH/PUT /users/1
   def update
     if @user.update(user_update_params)
-      byebug
       render json: @user
     else
       render json: @user.errors, status: :unprocessable_entity
