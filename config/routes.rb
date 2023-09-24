@@ -18,6 +18,12 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :transactions do
+    member do
+      put 'complete', to: 'transactions#complete_transaction'
+    end
+  end
+
   post '/login', to: 'sessions#user_create'
 
   resources :users do

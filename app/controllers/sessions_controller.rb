@@ -8,7 +8,7 @@ class SessionsController < ApplicationController
         token = encode_token(user.id, user.email, user.password)
         render json: {
           message: "#{user.firstName} successfully logged in",
-          data: { user: user, token: token },
+          data: { uid: user.id, token: token },
           status: :ok
         }
       else

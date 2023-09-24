@@ -1,5 +1,5 @@
 class TransactionsController < ApplicationController
-  before_action :verify_auth, only: %i[index confirm_transaction create destroy update]
+  before_action :verify_auth, only: %i[index confirm_transaction complete_transaction create destroy update]
   before_action :find_users_and_escrow, only: [:create]
 
   def index
@@ -53,6 +53,8 @@ class TransactionsController < ApplicationController
       if pending_transaction.destroy && transaction.save
         pending_transaction.user.account.subtract_from_personal_account_balance(pending_transaction.amount)
         byebug
+        pending_transaction.opposite_user.held_fund.add_to_personal_held_balance(pending_transaction.amount)
+        byebug
         render json: transaction
       else
         render json: { error: 'Failed to confirm transaction' }, status: :unprocessable_entity
@@ -60,18 +62,41 @@ class TransactionsController < ApplicationController
       end
     end
   end
+
+  def complete_transaction
+
+    transaction = Transaction.find(params[:id])
+  
+    # if transaction.status != 'PENDING'
+    #   render json: { error: 'Transaction is not in a pending state' }, status: :unprocessable_entity
+    #   return
+    # end
+  
+    if transaction.update(status: 1)
+      transaction.opposite_user.held_fund.subtract_from_personal_held_balance(transaction.amount)
+      byebug
+      transaction.opposite_user.account.add_to_personal_account_balance(transaction.amount)
+      byebug
+      render json: transaction
+    else
+      byebug
+      render json: { error: 'Failed to complete the transaction' }, status: :unprocessable_entity
+    end
+  
+  end
   
 
   private
 
   def transaction_params
-    params.require(:transaction).permit(:user_id, :opposite_user_id, :amount, :role)
+    params.require(:transaction).permit(:opposite_user_id, :amount, :role)
   end
 
   def find_users_and_escrow
     @user = User.find_by(id: @loggedin_user[:uid])
     @opposite_user = User.find_by(id: transaction_params[:opposite_user_id])
     @escrow = EscrowAccount.find_by(id: 1)
+    byebug
   end
 
   def create_transaction(role)
