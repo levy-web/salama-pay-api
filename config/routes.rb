@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :mpesas
   get 'sessions/new'
   get 'sessions/create'
   get 'sessions/destroy'
@@ -31,5 +32,8 @@ Rails.application.routes.draw do
       post 'verify_code'
     end
   end
+
+  post '/stkpush', to: 'mpesas#stkpush'
+  post '/stkquery', to: 'mpesas#stkquery'
 
 end
