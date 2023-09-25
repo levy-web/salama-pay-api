@@ -10,6 +10,8 @@ class TransactionsController < ApplicationController
 
   def create
     role = Transaction.roles.key(transaction_params[:role])
+    userIn = User.find_by(id: @loggedin_user[:uid])
+    
 
     if role.nil?
       render json: { error: 'Invalid role' }, status: :unprocessable_entity
@@ -18,6 +20,14 @@ class TransactionsController < ApplicationController
 
     transaction = create_transaction(role)
     byebug
+
+    
+
+    if transaction.amount > userIn.account.balance && role == 'BUYER'
+      byebug
+      render json: { message: 'Insufficient funds In your account' }, status: :unprocessable_entity
+      return
+    end
 
     if transaction.save
       update_account_balances(transaction) if role == 'BUYER'
@@ -29,9 +39,22 @@ class TransactionsController < ApplicationController
 
   def confirm_transaction
     pending_transaction = PendingSellerTransaction.find(params[:id])
+    userIn = User.find_by(id: @loggedin_user[:uid])
+
+    if userIn.id != pending_transaction.user.id
+      byebug
+      render json: { error: 'Unauthorized' }, status: :unauthorized
+      return
+    end
   
     if pending_transaction.buyer_confirmation == 'CONFIRMED'
       render json: { error: 'Transaction already confirmed by the buyer' }, status: :unprocessable_entity
+      return
+    end
+
+    if pending_transaction.amount > userIn.account.balance
+      byebug
+      render json: { error: 'Insufficient funds In your account' }, status: :unprocessable_entity
       return
     end
   
@@ -66,11 +89,18 @@ class TransactionsController < ApplicationController
   def complete_transaction
 
     transaction = Transaction.find(params[:id])
+    userIn = User.find_by(id: @loggedin_user[:uid])
+
+    if userIn.id != transaction.user.id
+      render json: { error: 'Unauthorized' }, status: :unauthorized
+      return
+    end
   
-    # if transaction.status != 'PENDING'
-    #   render json: { error: 'Transaction is not in a pending state' }, status: :unprocessable_entity
-    #   return
-    # end
+    if transaction.status != "PENDING"
+      byebug
+      render json: { error: 'Transaction is not in a pending state' }, status: :unprocessable_entity
+      return
+    end
   
     if transaction.update(status: 1)
       transaction.opposite_user.held_fund.subtract_from_personal_held_balance(transaction.amount)
