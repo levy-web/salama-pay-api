@@ -9,21 +9,18 @@ class SessionsController < ApplicationController
         render json: {
           message: "#{user.firstName} successfully logged in",
           data: { uid: user.id, token: token },
-          status: :ok
-        }
+          
+        }, status: :ok
       else
         render json: {
           message: "User is not verified",
-          data: { error: 'Please verify your account before logging in' },
-          status: :unprocessable_entity
-        }
+          
+        },status: :unprocessable_entity
       end
     else
       render json: {
-        message: "User failed to log in",
-        data: { error: 'Invalid email or password' },
-        status: :unprocessable_entity
-      }
+        message: "Invalid email or password",        
+      }, status: :unprocessable_entity
     end
   end
   
