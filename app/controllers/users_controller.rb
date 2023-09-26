@@ -27,7 +27,12 @@ class UsersController < ApplicationController
           # Use a database transaction to ensure all or none of the following operations succeed
           ActiveRecord::Base.transaction do
             # Send the verification code to the user's email
-            UserMailer.send_verification_code(@user).deliver_now
+            begin
+              UserMailer.send_verification_code(@user).deliver_now
+            rescue => e
+              Rails.logger.error("Error sending verification code email: #{e.message}")
+              # Handle the error appropriately, e.g., return an error response
+            end
   
             # Create a new account for the user with a balance of 0
             Account.create!(user: @user, balance: 0)
