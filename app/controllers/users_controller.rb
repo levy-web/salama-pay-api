@@ -39,7 +39,7 @@ class UsersController < ApplicationController
           render json: { uid: @user.id, message: 'User created. Check your email for the verification code.' }, status: :created
         rescue StandardError => e
           # Handle errors that occur during the transaction
-          render json: { error: 'An error occurred while processing your request.' }, status: :unprocessable_entity
+          render json: { message: 'An error occurred while processing your request.' }, status: :unprocessable_entity
         end
       else
         render json: { message: @user.errors.full_messages }, status: :unprocessable_entity
