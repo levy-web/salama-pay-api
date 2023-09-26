@@ -35,8 +35,8 @@ class User < ApplicationRecord
 
     def phone_uniqueness_on_update
         # Check phone uniqueness only during update
-        if phone_changed? && self.class.exists?(phone: phone)
-          errors.add(:phone, 'has already been taken')
+        if self.class.exists?(phone: phone)
+            errors.add(:phone, 'has already been taken')
         end
     end
 end
