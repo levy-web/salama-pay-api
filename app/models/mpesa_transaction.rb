@@ -1,0 +1,2 @@
+class MpesaTransaction < ApplicationRecord
+end

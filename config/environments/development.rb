@@ -15,6 +15,9 @@ Rails.application.configure do
   # Do not eager load code on boot.
   config.eager_load = false
 
+   # allow us to access our rails app from ngrok
+   config.hosts << /.*\.ngrok-free\.app/
+
   # Show full error reports.
   config.consider_all_requests_local = true
 
