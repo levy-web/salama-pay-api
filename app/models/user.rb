@@ -1,7 +1,7 @@
 class User < ApplicationRecord
 
     validates :email, presence: true, uniqueness: true
-    validates :phone, uniqueness: true, on: :update
+    validate :phone_uniqueness_on_update, on: :update    
     validates :email, format: { with: URI::MailTo::EMAIL_REGEXP}
     validates :password, length: {minimum: 6}, on: :create
 
@@ -30,4 +30,13 @@ class User < ApplicationRecord
     end
 
     validates :verification_code, length: { is: 6 }, numericality: { only_integer: true }, allow_blank: true
+
+    private
+
+    def phone_uniqueness_on_update
+        # Check phone uniqueness only during update
+        if phone_changed? && self.class.exists?(phone: phone)
+          errors.add(:phone, 'has already been taken')
+        end
+    end
 end
