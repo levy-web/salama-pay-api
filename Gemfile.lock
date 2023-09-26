@@ -97,6 +97,7 @@ GEM
     case_transform (0.2)
       activesupport
     concurrent-ruby (1.2.2)
+    connection_pool (2.4.1)
     crass (1.0.6)
     date (3.3.3)
     debug (1.8.0)
@@ -204,6 +205,8 @@ GEM
     rake (13.0.6)
     rdoc (6.5.0)
       psych (>= 4.0.0)
+    redis-client (0.17.0)
+      connection_pool
     reline (0.3.8)
       io-console (~> 0.5)
     rest-client (2.1.0)
@@ -213,6 +216,11 @@ GEM
       netrc (~> 0.8)
     ruby-vips (2.1.4)
       ffi (~> 1.12)
+    sidekiq (7.1.4)
+      concurrent-ruby (< 2)
+      connection_pool (>= 2.3.0)
+      rack (>= 2.2.4)
+      redis-client (>= 0.14.0)
     stringio (3.0.8)
     thor (1.2.2)
     timeout (0.4.0)
@@ -245,6 +253,7 @@ DEPENDENCIES
   rack-cors
   rails (~> 7.0.7)
   rest-client
+  sidekiq
   tzinfo-data
 
 RUBY VERSION

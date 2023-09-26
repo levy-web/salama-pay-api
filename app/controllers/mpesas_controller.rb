@@ -21,13 +21,15 @@ class MpesasController < ApplicationController
         'PartyB': business_short_code,
         'PhoneNumber': phoneNumber,
         'CallBackURL': "#{ENV["CALLBACK_URL"]}/callback_url",
-        'AccountReference': 'Codearn',
-        'TransactionDesc': "Payment for Codearn premium"
+        'AccountReference': 'Salama pay',
+        'TransactionDesc': "Deposit to salama pay account"
         }.to_json
+
+        accessToken = get_access_token
 
         headers = {
         Content_type: 'application/json',
-        Authorization: "Bearer #{get_access_token}"
+        Authorization: "Bearer #{accessToken}"
         }
 
         response = RestClient::Request.new({
@@ -38,14 +40,28 @@ class MpesasController < ApplicationController
         }).execute do |response, request|
         case response.code
             when 500
-            [ :error, JSON.parse(response.to_str) ]
+                [ :error, JSON.parse(response.to_str) ]
             when 400
-            [ :error, JSON.parse(response.to_str) ]
+                [ :error, JSON.parse(response.to_str) ]
             when 200
                 [ :success, JSON.parse(response.to_str) ]
             else
-            fail "Invalid response #{response.to_str} received."
+                fail "Invalid response #{response.to_str} received."
             end
+        end
+       
+        if response[0] == :success
+            byebug
+            checkout_request_id = response[1]['CheckoutRequestID']
+            amount = params[:amount].to_f
+            byebug
+      
+            # Create an M-Pesa Transaction record with "pending" status
+            MpesaTransaction.create(checkout_request_id: checkout_request_id, status: 'pending', amount: amount)
+      
+            # Enqueue the Sidekiq job to perform the STK query
+            MpesaQueryJob.perform_later(checkout_request_id, phoneNumber, accessToken)
+            byebug
         end
         render json: response
     end
@@ -74,16 +90,19 @@ class MpesasController < ApplicationController
         headers: headers
         }).execute do |response, request|
         case response.code
-        when 500
-        [ :error, JSON.parse(response.to_str) ]
-        when 400
-        [ :error, JSON.parse(response.to_str) ]
-        when 200
-        [ :success, JSON.parse(response.to_str) ]
-        else
-        fail "Invalid response #{response.to_str} received."
+            when 500
+                [ :error, JSON.parse(response.to_str) ]
+            when 400
+                [ :error, JSON.parse(response.to_str) ]
+            when 200
+                [ :success, JSON.parse(response.to_str) ]
+            else
+                fail "Invalid response #{response.to_str} received."
+            end
         end
-        end
+
+        process_stk_query_response(response, params[:checkoutRequestID])
+
         render json: response
     end
 
