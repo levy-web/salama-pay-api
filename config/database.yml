@@ -13,6 +13,7 @@ test:
 
 production:
   <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
   database: salama-pay-api_production
-  username: your_database_username
-  password: your_database_password
+  username: salama-pay-api
+  password: <%= ENV["BACKEND_DATABASE_PASSWORD"] %>
