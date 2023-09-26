@@ -51,17 +51,17 @@ class MpesasController < ApplicationController
         end
        
         if response[0] == :success
-            byebug
+            
             checkout_request_id = response[1]['CheckoutRequestID']
             amount = params[:amount].to_f
-            byebug
+            
       
             # Create an M-Pesa Transaction record with "pending" status
             MpesaTransaction.create(checkout_request_id: checkout_request_id, status: 'pending', amount: amount)
       
             # Enqueue the Sidekiq job to perform the STK query
             MpesaQueryJob.perform_later(checkout_request_id, phoneNumber, accessToken)
-            byebug
+            
         end
         render json: response
     end
@@ -122,7 +122,7 @@ class MpesasController < ApplicationController
         request['Authorization'] = "Basic #{@userpass}"
       
         response = https.request(request)
-        byebug
+        
       
         # Return the response object if needed
         response
@@ -130,7 +130,7 @@ class MpesasController < ApplicationController
 
     def get_access_token
         res = generate_access_token_request()
-        byebug
+        
         if res.code != '200'
           raise MpesaError.new('Unable to generate access token')
         end

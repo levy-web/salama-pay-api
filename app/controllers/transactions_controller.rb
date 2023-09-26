@@ -4,7 +4,7 @@ class TransactionsController < ApplicationController
 
   def index
     @user = User.find_by(id: @loggedin_user[:uid])
-    byebug
+    
     render json: {data: {sent_transactions: @user.sent_transactions, received_transactions: @user.received_transactions, pending_buyer_transactions: @user.pending_buyer_transactions, pending_seller_transactions: @user.pending_seller_transactions}}
   end
 
@@ -14,26 +14,33 @@ class TransactionsController < ApplicationController
     
 
     if role.nil?
-      render json: { error: 'Invalid role' }, status: :unprocessable_entity
+      render json: { message: 'Invalid role' }, status: :unprocessable_entity
       return
     end
 
     transaction = create_transaction(role)
-    byebug
+    
 
     
 
     if transaction.amount > userIn.account.balance && role == 'BUYER'
-      byebug
       render json: { message: 'Insufficient funds In your account' }, status: :unprocessable_entity
       return
     end
 
     if transaction.save
-      update_account_balances(transaction) if role == 'BUYER'
-      render json: transaction
+      if role == 'BUYER'
+        update_account_balances(transaction)
+        render json: { transaction:transaction, message: 'Transaction created succesfully and funds are pending in sellers account awaiting your confirmation.' }, status: :ok
+      elsif role == 'SELLER'
+        render json: { transaction:transaction, message: 'Request has been successfully sent to the buyer for confirmation.' }, status: :ok
+      end
     else
-      render json: { error: 'Failed to create transaction' }, status: :unprocessable_entity
+      if role == 'BUYER'
+        render json: { message: 'Transaction creation failed. Please try again.' }, status: :unprocessable_entity
+      elsif role == 'SELLER'
+        render json: { message: 'Failed to send request. Please try again.' }, status: :unprocessable_entity
+      end
     end
   end
 
@@ -42,24 +49,22 @@ class TransactionsController < ApplicationController
     userIn = User.find_by(id: @loggedin_user[:uid])
 
     if userIn.id != pending_transaction.user.id
-      byebug
-      render json: { error: 'Unauthorized' }, status: :unauthorized
+      render json: { message: 'Unauthorized' }, status: :unauthorized
       return
     end
   
     if pending_transaction.buyer_confirmation == 'CONFIRMED'
-      render json: { error: 'Transaction already confirmed by the buyer' }, status: :unprocessable_entity
+      render json: { message: 'Transaction already confirmed by the buyer' }, status: :unprocessable_entity
       return
     end
 
     if pending_transaction.amount > userIn.account.balance
-      byebug
-      render json: { error: 'Insufficient funds In your account' }, status: :unprocessable_entity
+      render json: { message: 'Insufficient funds In your account' }, status: :unprocessable_entity
       return
     end
   
     pending_transaction.buyer_confirmation = 'CONFIRMED'
-    byebug
+    
   
     # Move data to the Transaction table
     transaction = Transaction.new(
@@ -75,12 +80,12 @@ class TransactionsController < ApplicationController
     ActiveRecord::Base.transaction do
       if pending_transaction.destroy && transaction.save
         pending_transaction.user.account.subtract_from_personal_account_balance(pending_transaction.amount)
-        byebug
+
         pending_transaction.opposite_user.held_fund.add_to_personal_held_balance(pending_transaction.amount)
-        byebug
-        render json: transaction
+
+        render json: {transaction:transaction, message: 'Request accepted succesfully' }
       else
-        render json: { error: 'Failed to confirm transaction' }, status: :unprocessable_entity
+        render json: { message: 'Failed to confirm transaction' }, status: :unprocessable_entity
         raise ActiveRecord::Rollback # Rollback the transaction if there's an error
       end
     end
@@ -92,25 +97,21 @@ class TransactionsController < ApplicationController
     userIn = User.find_by(id: @loggedin_user[:uid])
 
     if userIn.id != transaction.user.id
-      render json: { error: 'Unauthorized' }, status: :unauthorized
+      render json: { message: 'Unauthorized' }, status: :unauthorized
       return
     end
   
     if transaction.status != "PENDING"
-      byebug
-      render json: { error: 'Transaction is not in a pending state' }, status: :unprocessable_entity
+      render json: { message: 'Transaction is not in a pending state' }, status: :unprocessable_entity
       return
     end
   
     if transaction.update(status: 1)
       transaction.opposite_user.held_fund.subtract_from_personal_held_balance(transaction.amount)
-      byebug
       transaction.opposite_user.account.add_to_personal_account_balance(transaction.amount)
-      byebug
-      render json: transaction
+      render json: { transaction:transaction, message: 'Transaction complete, funds are tranferred to sellers account' }, status: :ok
     else
-      byebug
-      render json: { error: 'Failed to complete the transaction' }, status: :unprocessable_entity
+      render json: { message: 'Failed to complete the transaction' }, status: :unprocessable_entity
     end
   
   end
@@ -126,7 +127,7 @@ class TransactionsController < ApplicationController
     @user = User.find_by(id: @loggedin_user[:uid])
     @opposite_user = User.find_by(id: transaction_params[:opposite_user_id])
     @escrow = EscrowAccount.find_by(id: 1)
-    byebug
+    
   end
 
   def create_transaction(role)
@@ -136,15 +137,12 @@ class TransactionsController < ApplicationController
     if role == 'BUYER'
       sender = @user
       receiver = @opposite_user
-    elsif role == 'SELLER'
+    else role == 'SELLER'
       sender = @opposite_user
       receiver = @user
-    else
-      render json: { error: 'Invalid role' }, status: :unprocessable_entity
-      return
     end
 
-    byebug
+    
 
     if role == 'SELLER'
       PendingSellerTransaction.new(
@@ -168,12 +166,12 @@ class TransactionsController < ApplicationController
   end
 
   def update_account_balances(transaction)
-    byebug
+    
     # subtract from the buyers account 
     @user.account.subtract_from_personal_account_balance(transaction.amount)
-    byebug
+    
     # add to sellers hold account
     @opposite_user.held_fund.add_to_personal_held_balance(transaction.amount)
-    byebug
+    
   end
 end

@@ -28,7 +28,6 @@ class SessionsController < ApplicationController
   #logout buttons
   def destroy
     session[:user_id] = nil
-    session[:farmer_id] = nil
     render json: { message: "Logged out" }
   end
 end

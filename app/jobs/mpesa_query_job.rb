@@ -3,10 +3,10 @@ class MpesaQueryJob < ApplicationJob
 
   def perform(checkout_request_id, phone_number, access_token)
     MpesaTransaction.transaction do
-      byebug
+    
 
       response = perform_stk_query(checkout_request_id, access_token)
-      byebug
+    
       
 
       # Call the process_stk_query_response method to process the response
@@ -33,7 +33,7 @@ class MpesaQueryJob < ApplicationJob
     Authorization: "Bearer #{access_token}"
     }
 
-    byebug
+  
 
     response = RestClient::Request.new({
     method: :post,
@@ -59,15 +59,15 @@ class MpesaQueryJob < ApplicationJob
   end
 
   def process_stk_query_response(response, checkout_request_id, phone_number)
-    byebug
+  
     case response[0]
     when :error
-      byebug
+    
       # Handle the error case, perhaps by notifying the user or logging the error
       # render json: { error: response[1] }, status: :unprocessable_entity
       Rails.logger.info(error: response[1])
     when :success
-      byebug
+    
       result_code = response[1]["ResultCode"]
 
       if result_code == "0"
@@ -79,7 +79,7 @@ class MpesaQueryJob < ApplicationJob
 
           # Retrieve the user by phone number (You need to define a User model and adapt this part)
           user = User.find_by(phone: "+#{phone_number}")
-          byebug
+        
 
           if user
             # Credit the user's account

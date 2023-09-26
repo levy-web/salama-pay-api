@@ -30,7 +30,7 @@ class ApplicationController < ActionController::API
     # verify authorization headers
     def verify_auth
         auth_headers = request.headers['Authorization']
-        byebug
+        
         if !auth_headers
             app_response(message: 'failed', status: 401, data: { info: 'Your request is not authorized.' })
         else
@@ -44,7 +44,7 @@ class ApplicationController < ActionController::API
     def save_user_id(token)
 
         @loggedin_user = {uid:decode(token)[0]["data"]["uid"].to_i, user_type:decode(token)[0]["data"]["email"]}
-        byebug
+        
         
   
     end

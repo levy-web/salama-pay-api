@@ -17,12 +17,12 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
     @user.verification_code = rand(100_000..999_999) # Generate a random 6-digit code
-    byebug
+
   
     if @user.save
-      byebug
+  
       if @user.valid?
-        byebug
+    
         begin
           # Use a database transaction to ensure all or none of the following operations succeed
           ActiveRecord::Base.transaction do
@@ -62,7 +62,7 @@ class UsersController < ApplicationController
   
       render json: { token:token, message: 'Verification successful. You are now registered.' }
     else
-      render json: { error: 'Invalid verification code.' }, status: :unprocessable_entity
+      render json: { message: 'Invalid verification code.' }, status: :unprocessable_entity
     end
   end
 
@@ -70,12 +70,12 @@ class UsersController < ApplicationController
 
   # PATCH/PUT /users/1
   def update
-    byebug
+
     if @user.update(user_update_params)
-      render json: @user
+      render json: {user:@user, message:"succesully saved data awaiting review from salama"}, status: :ok
     else
       puts @user.errors.full_messages
-      render json: @user.errors.full_messages, status: :unprocessable_entity
+      render json:{message: @user.errors.full_messages}, status: :unprocessable_entity
     end
   end
 
