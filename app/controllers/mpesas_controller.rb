@@ -60,7 +60,9 @@ class MpesasController < ApplicationController
             MpesaTransaction.create(checkout_request_id: checkout_request_id, status: 'pending', amount: amount)
       
             # Enqueue the Sidekiq job to perform the STK query
-            MpesaQueryJob.perform_later(checkout_request_id, phoneNumber, accessToken)
+            # MpesaQueryJob.perform_later(checkout_request_id, phoneNumber, accessToken)
+            MpesaQueryJob.set(wait: 30.seconds).perform_later(checkout_request_id, phone_number, access_token)
+
             
         end
         render json: response
