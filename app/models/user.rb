@@ -1,8 +1,8 @@
 class User < ApplicationRecord
 
     validates :email, presence: true, uniqueness: true
-    validate :phone_uniqueness_on_update, on: :update    
-    # validates :email, format: { with: URI::MailTo::EMAIL_REGEXP}
+    # validate :phone_uniqueness_on_update, on: :update    
+    validates :email, format: { with: URI::MailTo::EMAIL_REGEXP}
     validates :password, length: {minimum: 6}, on: :create
 
     has_secure_password
