@@ -2,6 +2,7 @@ class MpesaQueryJob < ApplicationJob
   queue_as :default
 
   def perform(checkout_request_id, phone_number, access_token)
+    sleep 30.seconds
     MpesaTransaction.transaction do
     
 
