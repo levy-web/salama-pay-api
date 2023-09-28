@@ -7,4 +7,4 @@
 #   Character.create(name: "Luke", movie: movies.first)
 
 
-Escrow_account.create(balance: 20000.00)
+EscrowAccount.create(balance: 20000.00)
