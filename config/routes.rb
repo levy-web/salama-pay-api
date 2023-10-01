@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
+  resources :emails, only: [:new, :create]
   resources :mpesas
-  get 'sessions/new'
-  get 'sessions/create'
-  get 'sessions/destroy'
+  get "sessions/new"
+  get "sessions/create"
+  get "sessions/destroy"
   resources :pending_seller_transactions
   resources :accounts
   resources :escrow_accounts
@@ -15,25 +16,24 @@ Rails.application.routes.draw do
 
   resources :transactions do
     member do
-      post 'confirm_transaction' # Define a custom route for confirming transactions
+      post "confirm_transaction" # Define a custom route for confirming transactions
     end
   end
 
   resources :transactions do
     member do
-      put 'complete', to: 'transactions#complete_transaction'
+      put "complete", to: "transactions#complete_transaction"
     end
   end
 
-  post '/login', to: 'sessions#user_create'
+  post "/login", to: "sessions#user_create"
 
   resources :users do
     member do
-      post 'verify_code'
+      post "verify_code"
     end
   end
-
-  post '/stkpush', to: 'mpesas#stkpush'
-  post '/stkquery', to: 'mpesas#stkquery'
-
+  post "/stkpush", to: "mpesas#stkpush"
+  post "/stkquery", to: "mpesas#stkquery"
+  post "/send-email", to: "emails#send_email"
 end
