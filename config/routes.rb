@@ -1,4 +1,18 @@
 Rails.application.routes.draw do
+  get 'contract_infos/index'
+  get 'contract_infos/show'
+  get 'contract_infos/new'
+  get 'contract_infos/create'
+  get 'contract_infos/edit'
+  get 'contract_infos/update'
+  get 'contract_infos/destroy'
+
+  # Define a route for GET request to "/contract_infos/:id"
+  get '/contract_infos/:id', to: 'contract_infos#show'
+
+  # Define a route for PUT request to "/contract_infos/:id"
+  put '/contract_infos/:id', to: 'contract_infos#update'
+
   resources :emails, only: [:new, :create]
   resources :mpesas
   get "sessions/new"

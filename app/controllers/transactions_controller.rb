@@ -2,10 +2,10 @@ class TransactionsController < ApplicationController
   before_action :verify_auth, only: %i[index confirm_transaction complete_transaction create destroy update]
   before_action :find_users_and_escrow, only: [:create]
 
-  def index
-    @user = User.find_by(id: @loggedin_user[:uid])
-    
-    render json: {data: {sent_transactions: @user.sent_transactions, received_transactions: @user.received_transactions, pending_buyer_transactions: @user.pending_buyer_transactions, pending_seller_transactions: @user.pending_seller_transactions}}
+  def show
+    @transaction = Transaction.find_by(id: params[:id])
+  
+    render json: {data: @transaction.contract_info, message: "succesful"}
   end
 
   def create
@@ -29,11 +29,34 @@ class TransactionsController < ApplicationController
     end
 
     if transaction.save
+
+
       if role == 'BUYER'
         update_account_balances(transaction)
         render json: { transaction:transaction, message: 'Transaction created succesfully and funds are pending in sellers account awaiting your confirmation.' }, status: :ok
       elsif role == 'SELLER'
-        render json: { transaction:transaction, message: 'Request has been successfully sent to the buyer for confirmation.' }, status: :ok
+        byebug
+        @buyer = User.find_by(id: transaction.user_id)
+        @seller = User.find_by(id: transaction.opposite_user_id)
+        @contract = ContractInfo.create!(
+            payment_terms: "Payment shall shall be deducted from the buyers account on accepting transaction contract and will be on hold in sellers account until buyer is satisfied",
+            governing_law: "This contract shall be governed by and construed in accordance with the laws of the State of Kenya.",
+            salama_terms: "Both parties agree to comply with Salama's privacy and security policies.",
+            dispute_resolution: "Incase of disputes you raise a ticket with details and salama will mediate and refund after following through the transaction.",
+            termination: "After you raise an issue salama will terminate the contract and money sent to rightful person depending on the transaction",
+            agreement: "This contract represents the entire agreement between the parties and supersedes all prior agreements.",
+            accepted: false,
+            product_name: "eg Peugeot 504",
+            product_price: transaction.amount,
+            seller_name: @seller.firstName,
+            seller_email: @seller.email,
+            buyer_name: @buyer.firstName,
+            buyer_email: @buyer.email,
+            transaction_id: transaction.id
+        )
+  
+        byebug
+        render json: { contract_id:@contract.id, transaction:transaction, message: 'Request has been successfully sent to the buyer for confirmation.' }, status: :ok
       end
     else
       if role == 'BUYER'
