@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_10_01_123010) do
+ActiveRecord::Schema[7.0].define(version: 2023_10_04_163539) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -54,6 +54,26 @@ ActiveRecord::Schema[7.0].define(version: 2023_10_01_123010) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "contract_infos", force: :cascade do |t|
+    t.text "payment_terms"
+    t.text "governing_law"
+    t.text "salama_terms"
+    t.text "dispute_resolution"
+    t.text "termination"
+    t.text "agreement"
+    t.boolean "accepted"
+    t.string "seller_name"
+    t.string "seller_email"
+    t.string "buyer_name"
+    t.string "buyer_email"
+    t.bigint "transaction_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "product_name"
+    t.decimal "product_price"
+    t.index ["transaction_id"], name: "index_contract_infos_on_transaction_id"
   end
 
   create_table "emails", force: :cascade do |t|
@@ -144,6 +164,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_10_01_123010) do
   add_foreign_key "accounts", "users"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "contract_infos", "transactions"
   add_foreign_key "held_funds", "users"
   add_foreign_key "pending_seller_transactions", "escrow_accounts"
   add_foreign_key "pending_seller_transactions", "users"
